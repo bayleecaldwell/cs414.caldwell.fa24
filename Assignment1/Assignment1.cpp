@@ -1,11 +1,14 @@
 #include <iostream>
-#include <cstdlib>
-#include <ctime>
+#include <random>
+#include <algorithm>
 
 void FillWithRandomNumbers(int data[], int size) {
-    std::srand(static_cast<unsigned>(std::time(nullptr)));
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<> dis(0, 100000);
+
     for (int i = 0; i < size; ++i) {
-        data[i] = std::rand() % 100001; 
+        data[i] = dis(gen);
     }
 }
 
@@ -20,7 +23,7 @@ void SortTheArray(int data[], int size) {
 }
 
 int main() {
-    const int size = 100;
+    const int size = 10;
     int data[size];
 
     FillWithRandomNumbers(data, size);
@@ -29,6 +32,7 @@ int main() {
     for (int i = 0; i < size; ++i) {
         std::cout << data[i] << " ";
     }
+    std::cout << std::endl;
 
     return 0;
 }
