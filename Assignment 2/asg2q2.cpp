@@ -1,23 +1,22 @@
 #include <functional>
 #include <unordered_map>
+#include <string>
 
-class CaseOf {
+class Object {
 public:
-    template<typename T>
-    CaseOf(T value, const std::unordered_map<T, std::function<std::string()>>& cases, const std::function<std::string()>& defaultCase)
-        : value_(value), cases_(cases), defaultCase_(defaultCase) {}
-
-    std::string evaluate() const {
-        auto it = cases_.find(value_);
-        if (it != cases_.end()) {
+    std::string caseOf(const std::unordered_map<int, std::function<std::string()>>& cases, const std::function<std::string()>& defaultCase) {
+        auto it = cases.find(value_);
+        if (it != cases.end()) {
             return it->second();
         } else {
-            return defaultCase_();
+            return defaultCase();
         }
     }
 
+    void setValue(int value) {
+        value_ = value;
+    }
+
 private:
-    const int value_;
-    const std::unordered_map<int, std::function<std::string()>>& cases_;
-    const std::function<std::string()>& defaultCase_;
+    int value_;
 };
