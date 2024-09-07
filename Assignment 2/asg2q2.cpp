@@ -21,4 +21,3 @@ private:
     const std::unordered_map<int, std::function<std::string()>>& cases_;
     const std::function<std::string()>& defaultCase_;
 };
-
