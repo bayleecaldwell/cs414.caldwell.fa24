@@ -141,3 +141,104 @@ private:
         return true;
     }
 };
+
+class Parser {
+public:
+    explicit Parser(const std::vector<Token>& tokens) : tokens(tokens), pos(0) {}
+
+    std::unique_ptr<ASTNode> parse() {
+        if (pos >= tokens.size()) throw std::runtime_error("Empty command");
+
+        Token token = tokens[pos];
+        std::unique_ptr<ASTNode> result;
+
+        switch (token.type) {
+            case LS:
+                result = parseLsCommand();
+                break;
+            case CD:
+                result = parseCdCommand();
+                break;
+            case CAT:
+                result = parseCatCommand();
+                break;
+            case PRINT:
+                result = parsePrintCommand();
+                break;
+            case EXEC:
+                result = parseExecCommand();
+                break;
+            case SET:
+                result = parseSetCommand();
+                break;
+            case ECHO:
+                result = parseEchoCommand();
+                break;
+            default:
+                throw std::runtime_error("Unknown command");
+        }
+
+        printSymbolTable();
+        return result;
+    }
+
+private:
+    const std::vector<Token>& tokens;
+    size_t pos;
+    std::unordered_map<std::string, std::string> symbolTable;
+
+    std::unique_ptr<ASTNode> parseLsCommand() {
+        pos++;
+        if (pos < tokens.size() && tokens[pos].type == FOLDER) {
+            return std::make_unique<CommandNode>("ls", tokens[pos++].value);
+        }
+        return std::make_unique<CommandNode>("ls");
+    }
+
+    std::unique_ptr<ASTNode> parseCdCommand() {
+        pos++;
+        if (pos < tokens.size()) {
+            if (tokens[pos].type == ROOT) {
+                pos++;
+                return std::make_unique<CommandNode>("cd", "\\");
+            } else if (tokens[pos].type == FOLDER) {
+                std::string path = parseFolderPath();
+                return std::make_unique<CommandNode>("cd", path);
+            }
+        }
+        return std::make_unique<CommandNode>("cd");
+    }
+
+    std::unique_ptr<ASTNode> parseCatCommand() {
+        pos++;
+        if (pos < tokens.size() && tokens[pos].type == FILENAME) {
+            return std::make_unique<CommandNode>("cat", tokens[pos++].value);
+        }
+        throw std::runtime_error("Syntax error: Expected filename after 'cat'");
+    }
+
+    std::unique_ptr<ASTNode> parsePrintCommand() {
+        pos++;
+        if (pos < tokens.size() && tokens[pos].type == FILENAME) {
+            return std::make_unique<CommandNode>("print", tokens[pos++].value);
+        }
+        throw std::runtime_error("Syntax error: Expected filename after 'print'");
+    }
+
+    std::unique_ptr<ASTNode> parseExecCommand() {
+        pos++;
+        if (pos < tokens.size() && tokens[pos].type == FILENAME) {
+            return std::make_unique<CommandNode>("exec", tokens[pos++].value);
+        }
+        throw std::runtime_error("Syntax error: Expected filename after 'exec'");
+    }
+
+    std::unique_ptr<ASTNode> parseSetCommand() {
+        pos++;
+        if (pos < tokens.size() && tokens[pos].type == VARIABLE) {
+            std::string varName = tokens[pos++].value;
+            if (pos < tokens.size() && tokens[pos].type == EQUAL) {
+                pos++;
+                if (pos < tokens.size() && tokens[pos].type == STRING) {
+                    symbolTable[varName] = tokens[pos++].value;
+                    return std::make_unique<CommandNode>("SET", varName + " = "
